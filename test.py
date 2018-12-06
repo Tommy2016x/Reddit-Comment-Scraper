@@ -1,35 +1,40 @@
 import praw
-import pandas as pd
-import datetime as dt 
-from praw.models import MoreComments
-import operator
+import matplotlib.pyplot as plt
 
-reddit = praw.Reddit(client_id='Client id', \
-                     client_secret='CLient secret', \
+#top secret data 
+reddit = praw.Reddit(client_id='id', \
+                     client_secret='secret', \
                      user_agent='Scraper', \
-                     username='Username', \
-                     password='Password')
+                     username='username', \
+                     password='password')
 
-subreddit = reddit.subreddit('cscareerquestions')
+subredditname = "politics"
+
+subreddit = reddit.subreddit(subredditname)
 
 top_subbreddit = subreddit.top()
 count = 0
-max = 5000
+max = 10000
 print('success')
 words = []
 wordCount = {}
 commonWords = {'that','this','and','of','the','for','I','it','has','in',
 'you','to','was','but','have','they','a','is','','be','on','are','an','or',
 'at','as','do','if','your','not','can','my','their','them','they','with',
-'at','about','would','like','there','You','from'}
+'at','about','would','like','there','You','from','get','just','more','so',
+'me','more','out','up','some','will','how','one','what',"don't",'should',
+'could','did','no','know','were','did',"it's",'This','he','The','we',
+'all','when','had','see','his','him','who','by','her','she','our','thing','-',
+'now','what','going','been','we',"I'm",'than','any','because','We','even',
+'said','only','want','other','into','He','what','i','That','thought',
+'think',"that's",'Is','much'}
 
-for submission in subreddit.top(limit=50):
+for submission in subreddit.top(limit=500):
     submission.comments.replace_more(limit=0)
     for top_level_comment in submission.comments:
         count += 1
         if(count == max):
             break
-        # print(top_level_comment.body)
         word = ""
         for letter in top_level_comment.body:
             if(letter == ' '):
@@ -37,27 +42,38 @@ for submission in subreddit.top(limit=50):
                     word = word[:-1]
                 if not word in commonWords:
                     words.append(word)
-                
                 word = ""
             else:
                 word += letter
-            # print(letter)
     if(count == max):
             break
-
-print(count)
 
 for word in words:
     if word in wordCount:
         wordCount[word] += 1
     else:
         wordCount[word] = 1
-    # print(word)
 
-print(len(words))
+sortedList = sorted(wordCount, key = wordCount.get, reverse = True)
 
-sortedList = sorted(wordCount.items(), key=operator.itemgetter(1))
+keyWords = []
+keyCount = []
+amount = 0
 
 for entry in sortedList:
-    print(entry)
+    keyWords.append(entry)
+    keyCount.append(wordCount[entry])
+    amount += 1
+    if (amount == 10):
+        break
 
+labels = keyWords
+sizes = keyCount
+# explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+
+plt.title('Top comments for: r/' + subredditname)
+plt.pie(sizes, labels=labels, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+plt.show()
